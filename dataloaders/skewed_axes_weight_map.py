@@ -3,6 +3,8 @@ from sympy.geometry.line import Line2D
 from sympy.sets import EmptySet
 import numpy as np
 import random
+from implementation import *
+import cv2 as cv
 
 def get_dist_from_line_segment(x1, c, x2, p, sig1, sig2):
     '''Given three colinear points, x1, c, x2 (geometric order), this program
@@ -304,7 +306,6 @@ def compute_d1_d2_fast_skewed_axes(x, y, extreme_points, mahalonobis=1):
     '''
     assert isinstance(extreme_points, np.ndarray), "Exteme points should be passed as an ndarray"
     assert extreme_points.shape==(4,2), "Extreme point array shape must be (4,2)"
-    
     c, pairs         = getPointOfIntersection(extreme_points)
     extreme_points   = extreme_points[pairs,:]
 
@@ -331,7 +332,7 @@ def compute_d1_d2_fast_skewed_axes(x, y, extreme_points, mahalonobis=1):
 
     return d1, d2
 
-def generate_mvL1L2_image_skewed_axes(mask, extreme_points=None, FULL_IMAGE_WEIGHTS=1, d2_THRESH=None):
+def generate_mvL1L2_image_skewed_axes(mask, extreme_points=None, FULL_IMAGE_WEIGHTS=1, d2_THRESH=None, tau=1):
     '''This function generates a weight map given a binary mask. Operations:
         1) Extract 4 extreme points, pair them into intersecting line segments.
         2) Figure out the length, angles of the line segments.
@@ -350,22 +351,66 @@ def generate_mvL1L2_image_skewed_axes(mask, extreme_points=None, FULL_IMAGE_WEIG
     assert mask.dtype==np.bool, "Mask dtype must be np.bool"
     assert mask.ndim==2, "Mask must be 2D"
     if extreme_points is not None:
-        assert isinstance(extreme_points, np.ndarray), "Extreme points must be in np.ndarray type"
+        assert isinstance(extreme_points, np.ndarray), "Extreme points must be np.ndarray"
         assert extreme_points.shape==(4,2), "Extreme points must have shape=(4,2)"
 
     y, x = np.nonzero(mask)
 
     x = np.arange(mask.shape[1])
     y = np.arange(mask.shape[0])
-
     if extreme_points is None:
-        extreme_points = getExtremePointFromMask(mask, 0)
-
+        extreme_points = make_lines(mask)
     d1, d2 = compute_d1_d2_fast_skewed_axes(x, y, extreme_points, mahalonobis=1)
-    z = 1/(1+d1*d2)
+    z = 1/(1+d1*d2*tau)
     if d2_THRESH:
         z = z*(d2<d2_THRESH)
+    z1 = np.zeros(tuple(list(z.shape)+[3]), z.dtype)
+    z1[:,:,:] = z[:,:,np.newaxis]
+    z1 = z1*255.01
+    z1 = z1.astype(np.uint8)
+    # cv.imwrite("TempZ.png", z1)
     return z, d1, d2
+
+def make_lines(mask, stdDevMultiplier=6, angle_perturb=False):
+    '''This function returns end points of major and minor axes of an ellipse fit
+    on the mask (input) foreground.
+    Input:
+        mask - 2d np.ndarray dtype=bool, shows a binary mask with foreground=True
+        stdDevMultiplier - Scalar, controls the extent of the major/minor axes drawn onto image
+        angle_perturb - a bool to decide whether or not to randomly rotate one of the axes by a small amount
+    Output:
+        pts - (4,2) np.ndarray, containing end points of major/minor axes '''
+    assert isinstance(mask, np.ndarray), "Mask must be a numpy.ndarray type"
+    assert mask.ndim == 2, "Mask must be 2d"
+    assert mask.dtype==np.bool, "Mask dtype must be np.bool"
+
+    y, x = np.nonzero(mask)
+    xbar, ybar, cov = compute_cov_xyMean(x, y)
+    evals, evecs = np.linalg.eig(cov)
+   
+    random_angle_limit = 15
+    if angle_perturb==True:
+        theta = np.random.uniform(-1*random_angle_limit, random_angle_limit)
+        theta = theta*np.pi/180
+        R     = np.zeros((2,2))
+        R[0,0]=    np.cos(theta)
+        R[0,1]= -1*np.sin(theta)
+        R[1,0]=    np.sin(theta)
+        R[1,1]=    np.cos(theta)
+        evecsR = evecs.T.dot(R).T
+        axis = np.random.randint(0, 2)
+        evecs[:,axis] = evecsR[:,axis]
+
+    mean = np.array([xbar, ybar])
+    '''Make lines a length of 2 stddev.'''
+    pts = np.empty((4,2))
+    for i in range(len(evals)):
+        std = np.sqrt(evals[i])
+        vec = stdDevMultiplier * std * evecs[:,i] / np.hypot(*evecs[:,i])
+        pts[i*2,   :] = mean-vec
+        pts[i*2+1, :] = mean+vec        
+    return pts
+
 
 # def getExtremePointFromMask(mask):
 #     extreme_points = np.zeros((4,2), dtype=np.float)
@@ -376,15 +421,8 @@ def generate_mvL1L2_image_skewed_axes(mask, extreme_points=None, FULL_IMAGE_WEIG
 #     return extreme_points
 
 
-def getExtremePointFromMask(mask, pert = 0):
-	'''This function is copied from DEXTR-Pytorch implementation at : https://github.com/scaelles/DEXTR-PyTorch"
-	This function returns the four exrtreme point in a binary mask (top, bottom, left, right)
-	Input:
-		mask - a 2D binary array with 1 for foreground and 0 for background
-		pert - perturbation applied to the indices of the extreme point (default is zero)
-	Output:
-		a 2D array with shape (4,2) in which rows represent the top, bottom, left, and right extreme point respectively.	
-	'''
+
+def extreme_points(mask, pert):
     def find_point(id_x, id_y, ids):
         sel_id = ids[0][random.randint(0, len(ids[0]) - 1)]
         return [id_x[sel_id], id_y[sel_id]]
@@ -393,8 +431,8 @@ def getExtremePointFromMask(mask, pert = 0):
     inds_y, inds_x = np.where(mask > 0.5)
 
     # Find extreme points
-    return np.array([find_point(inds_x, inds_y, np.where(inds_y <= np.min(inds_y)+pert)), # top
-                     find_point(inds_x, inds_y, np.where(inds_y >= np.max(inds_y)-pert)), # bottom
-                     find_point(inds_x, inds_y, np.where(inds_x <= np.min(inds_x)+pert)), # left
-                     find_point(inds_x, inds_y, np.where(inds_x >= np.max(inds_x)-pert))  # right
+    return np.array([find_point(inds_x, inds_y, np.where(inds_x <= np.min(inds_x)+pert)), # left
+                     find_point(inds_x, inds_y, np.where(inds_x >= np.max(inds_x)-pert)), # right
+                     find_point(inds_x, inds_y, np.where(inds_y <= np.min(inds_y)+pert)), # top
+                     find_point(inds_x, inds_y, np.where(inds_y >= np.max(inds_y)-pert)) # bottom
                      ])
