@@ -18,6 +18,8 @@ Please cite the following work if you use this package.
     year={2019}
 }
 ```
+## Acnowledgement
+We thank the authors of [DEXTR-PyTorch](https://github.com/scaelles/DEXTR-PyTorch) and [pytorch-deeplab-resnet](https://github.com/isht7/pytorch-deeplab-resnet) for making their PyTorch implementation of DEXTR and DeepLab-v2 available!
 
 ## Contact 
 Please contact Shadab Khan (skhan.shadab@gmail.com) or Ahmed Shahin (ahmedhassan9922@gmail.com) for any further inqueries.
