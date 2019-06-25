@@ -6,6 +6,7 @@ This repository is the PyTorch implementation for our paper [Extreme Points Deri
 ## Dependencies
 1. PyTorch 1.1.0
 2. Python 3.6
+3. Pydicom 1.2.2
 
 ## Citation
 Please cite the following work if you use this package.
