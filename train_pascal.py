@@ -154,7 +154,7 @@ if resume_epoch != nEpochs:
             # tr.ConcatInputs(elems=('crop_image', 'extreme_points')),
             tr.ToTensor()])
         composed_transforms_ts = transforms.Compose([
-            tr.CropFromMask(crop_elems=('image', 'gt'), zero_pad=zero_pad_crop),
+            tr.CropFromMaskDynamic(crop_elems=('image', 'gt'), zero_pad=zero_pad_crop),
             tr.FixedResize(resolutions={'crop_image': (256, 256), 'crop_gt': (256, 256)}, is_val = True),
             # tr.ExtremePoints(sigma=10, pert=0, elem='crop_gt'),
             # tr.ToImage(norm_elem='extreme_points'),
