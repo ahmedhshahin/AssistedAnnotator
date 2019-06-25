@@ -325,66 +325,66 @@ class CropFromMask(object):
         return 'CropFromMask:(crop_elems='+str(self.crop_elems)+', mask_elem='+str(self.mask_elem)+\
                ', relax='+str(self.relax)+',zero_pad='+str(self.zero_pad)+')'
 
-# class CropFromMask(object):
-#     """
-#     Returns image cropped in bounding box from a given mask
-#     """
-#     def __init__(self, crop_elems=('image', 'gt'),
-#                  mask_elem='gt',
-#                  zero_pad=False):
+class CropFromMaskDynamic(object):
+    """
+    Returns image cropped in bounding box from a given mask
+    """
+    def __init__(self, crop_elems=('image', 'gt'),
+                 mask_elem='gt',
+                 zero_pad=False):
 
-#         self.crop_elems = crop_elems
-#         self.mask_elem = mask_elem
-#         # self.relax = relax
-#         self.zero_pad = zero_pad
-#         self.dz = np.random.randint(350,401)
+        self.crop_elems = crop_elems
+        self.mask_elem = mask_elem
+        self.zero_pad = zero_pad
 
-#     def __call__(self, sample):
-#         _target = sample[self.mask_elem]
-#         if len(np.unique(_target)) == 1:
-#             sample['crop_image'] = sample['image']
-#             sample['crop_gt'] = sample['gt']
-#             return sample 
-#         if _target.ndim == 2:
-#             _target = np.expand_dims(_target, axis=-1)
-#         for elem in self.crop_elems:
-#             _img = sample[elem]
-#             _crop = []
-#             ### dynamic relax crop ###
-#             bbox = helpers.get_bbox(_target)
-#             d = np.maximum(bbox[2] - bbox[0], bbox[3] - bbox[1])
-#             zoom_factor = self.dz/d
-#             crop_relax = (512-d*zoom_factor)/(2*zoom_factor)
-#             self.crop_relax = np.ceil(crop_relax).astype(int)
-#             sample['crop_relax'] = self.crop_relax
-#             ###                    ###
-#             if self.mask_elem == elem:
-#                 if _img.ndim == 2:
-#                     _img = np.expand_dims(_img, axis=-1)
-#                 for k in range(0, _target.shape[-1]):
-#                     _tmp_img = _img[..., k]
-#                     _tmp_target = _target[..., k]
-#                     if np.max(_target[..., k]) == 0:
-#                         _crop.append(np.zeros(_tmp_img.shape, dtype=_img.dtype))
-#                     else:
-#                         _crop.append(helpers.crop_from_mask(_tmp_img, _tmp_target, relax=self.crop_relax, zero_pad=self.zero_pad))
-#             else:
-#                 for k in range(0, _target.shape[-1]):
-#                     if np.max(_target[..., k]) == 0:
-#                         _crop.append(np.zeros(_img.shape, dtype=_img.dtype))
-#                     else:
-#                         _tmp_target = _target[..., k]
-#                         _crop.append(helpers.crop_from_mask(_img, _tmp_target, relax=self.crop_relax, zero_pad=self.zero_pad))
-#             if len(_crop) == 1:
-#                 sample['crop_' + elem] = _crop[0]
-#             else:
-#                 sample['crop_' + elem] = _crop
-#         return sample
+    def __call__(self, sample):
+        self.dz = random.randint(350,400)
+        _target = sample[self.mask_elem]
+        if len(np.unique(_target)) == 1:
+            sample['crop_image'] = sample['image']
+            sample['crop_gt'] = sample['gt']
+            return sample 
+        if _target.ndim == 2:
+            _target = np.expand_dims(_target, axis=-1)
+        for elem in self.crop_elems:
+            _img = sample[elem]
+            _crop = []
+            ### dynamic relax crop ###
+            bbox = helpers.get_bbox(_target)
+            d = np.maximum(bbox[2] - bbox[0], bbox[3] - bbox[1])
+            sample['temp'] = d
+            zoom_factor = self.dz/d
+            crop_relax = (512-d*zoom_factor)/(2*zoom_factor)
+            self.crop_relax = np.ceil(crop_relax).astype(int)
+            self.crop_relax = np.maximum(15, self.crop_relax)
+            sample['crop_relax'] = self.crop_relax
+            ###                    ###
+            if self.mask_elem == elem:
+                if _img.ndim == 2:
+                    _img = np.expand_dims(_img, axis=-1)
+                for k in range(0, _target.shape[-1]):
+                    _tmp_img = _img[..., k]
+                    _tmp_target = _target[..., k]
+                    if np.max(_target[..., k]) == 0:
+                        _crop.append(np.zeros(_tmp_img.shape, dtype=_img.dtype))
+                    else:
+                        _crop.append(helpers.crop_from_mask(_tmp_img, _tmp_target, relax=self.crop_relax, zero_pad=self.zero_pad))
+            else:
+                for k in range(0, _target.shape[-1]):
+                    if np.max(_target[..., k]) == 0:
+                        _crop.append(np.zeros(_img.shape, dtype=_img.dtype))
+                    else:
+                        _tmp_target = _target[..., k]
+                        _crop.append(helpers.crop_from_mask(_img, _tmp_target, relax=self.crop_relax, zero_pad=self.zero_pad))
+            if len(_crop) == 1:
+                sample['crop_' + elem] = _crop[0]
+            else:
+                sample['crop_' + elem] = _crop
+        return sample
 
-#     def __str__(self):
-#         return 'CropFromMask:(crop_elems='+str(self.crop_elems)+', mask_elem='+str(self.mask_elem)+\
-#                ', relax='+str('dynamic')+',zero_pad='+str(self.zero_pad)+')'
-
+    def __str__(self):
+        return 'CropFromMask:(crop_elems='+str(self.crop_elems)+', mask_elem='+str(self.mask_elem)+\
+               ', relax='+str('dynamic')+',zero_pad='+str(self.zero_pad)+')'
 
 class ToImage(object):
     """
