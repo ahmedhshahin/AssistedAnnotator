@@ -5,7 +5,7 @@ import numpy as np
 from copy import deepcopy
 import os
 from torch.nn import functional as F
-from mypath import Path
+from dataloaders.mypath import Path
 from collections import OrderedDict
 
 affine_par = True
