@@ -240,12 +240,12 @@ class ResNet(nn.Module):
         self.load_state_dict(new_state)
 
 
-def resnet101(n_classes, pretrained=False, nInputChannels=3, classifier="atrous", n_classification_classes = 0,
+def resnet101(n_classes, pretrained=False, nInputChannels=3, classifier="atrous",
               dilations=(2, 4), strides=(2, 2, 2, 1, 1)):
     """Constructs a ResNet-101 model.
     """
     model = ResNet(Bottleneck, [3, 4, 23, 3], n_classes, nInputChannels=nInputChannels,
-                   classifier=classifier, n_classification_classes = n_classification_classes, dilations=dilations, strides=strides, _print=True)
+                   classifier=classifier, dilations=dilations, strides=strides, _print=True)
     if pretrained:
         model_full = Res_Deeplab(n_classes, pretrained=pretrained)
         model.load_pretrained_ms_modified(model_full, nInputChannels=nInputChannels)
