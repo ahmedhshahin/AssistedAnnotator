@@ -61,7 +61,7 @@ def restore_graphs(Writer, train_loss, val_loss, accs):
     '''
     n = len(train_loss)
     for i in range(n):
-        Writer.add_scalars('data/loss_epoch', {'validation': val_loss[i],'training segmentation': train_loss_seg[i]}, i)
+        Writer.add_scalars('data/loss_epoch', {'validation': val_loss[i],'training segmentation': train_loss[i]}, i)
         Writer.add_scalar('data/validation_accuracy', accs[i], i)
     print("Graphs Restored")
 

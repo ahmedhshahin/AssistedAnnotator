@@ -7,7 +7,7 @@ from PIL import Image
 from scipy import misc
 
 def save_checkpoint(epoch, net, optimizer, jac_avg, tr_loss, val_loss, accs, fname):
-    state = {'epoch': epoch + 1, 'state_dict': net.state_dict(), 'optimizer': optimizer.state_dict(), 'accuracy': jac_avg, 'tr_loss': tr_loss, 'tr_loss': tr_loss,'val_loss': val_loss, 'accs': accs}
+    state = {'epoch': epoch + 1, 'state_dict': net.state_dict(), 'optimizer': optimizer.state_dict(), 'accuracy': jac_avg, 'tr_loss': tr_loss, 'val_loss': val_loss, 'accs': accs}
     print(fname)
     torch.save(state, fname)
 
@@ -18,8 +18,7 @@ def load_checkpoint(model, optimizer, fname, device):
         start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        tr_loss_seg = checkpoint['tr_loss_seg']
-        tr_loss_cls = checkpoint['tr_loss_cls']
+        tr_loss_seg = checkpoint['tr_loss']
         val_loss = checkpoint['val_loss']
         acc = checkpoint['accuracy']
         accs = checkpoint['accs']
@@ -32,7 +31,7 @@ def load_checkpoint(model, optimizer, fname, device):
         print("no checkpoint found at '{}'".format(fname))
         x = np.zeros(2)
         np.save('done.npy',x)
-    return model, optimizer, start_epoch, tr_loss_seg, tr_loss_cls, val_loss, acc, accs
+    return model, optimizer, start_epoch, tr_loss, val_loss, acc, accs
 
 
 def sorting_fn(x):
