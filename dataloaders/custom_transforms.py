@@ -2,9 +2,9 @@ import torch, cv2
 
 import numpy.random as random
 import numpy as np
-import helpers as helpers
-from implementation import *
-from skewed_axes_weight_map import *
+import dataloaders.helpers as helpers
+from dataloaders.implementation import *
+from dataloaders.skewed_axes_weight_map import *
 import matplotlib.pyplot as plt
 
 class ScaleNRotate(object):

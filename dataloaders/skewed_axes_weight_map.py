@@ -3,7 +3,7 @@ from sympy.geometry.line import Line2D
 from sympy.sets import EmptySet
 import numpy as np
 import random
-from implementation import *
+from dataloaders.implementation import *
 import cv2 as cv
 
 def get_dist_from_line_segment(x1, c, x2, p, sig1, sig2):

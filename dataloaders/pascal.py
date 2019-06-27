@@ -11,9 +11,9 @@ from PIL import Image
 from six.moves import urllib
 import json
 from dataloaders.mypath import Path
-from implementation import colorMaskWithAlpha
+from dataloaders.implementation import colorMaskWithAlpha
 from scipy import misc
-import config
+import dataloaders.config as config
 
 cfg = config.hyperparams
 class VOCSegmentation(data.Dataset):
