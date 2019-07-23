@@ -6,6 +6,12 @@ import numpy as np
 from PIL import Image
 from scipy import misc
 
+def calc_dice(x,y):
+    if len(np.unique(x)) == 1 and len(np.unique(y)) == 1:
+        return 1
+    else:
+        return ((np.sum(x[y == 1]) * 2) / (np.sum(x) + np.sum(y)))
+
 def save_checkpoint(epoch, net, optimizer, jac_avg, tr_loss, val_loss, accs, fname):
     state = {'epoch': epoch + 1, 'state_dict': net.state_dict(), 'optimizer': optimizer.state_dict(), 'accuracy': jac_avg, 'tr_loss': tr_loss, 'val_loss': val_loss, 'accs': accs}
     print(fname)
