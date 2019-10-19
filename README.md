@@ -1,4 +1,4 @@
-# Extreme Points Derived Confidence Map as a Cue for Class-Agnostic Segmentation Using Deep Neural Network
+# Extreme Points Derived Confidence Map as a Cue for Class-Agnostic Interactive Segmentation Using Deep Neural Network
 
 ## Overview
 This repository is the PyTorch implementation for our paper [Extreme Points Derived Confidence Map as a Cue for Class-Agnostic Interactive Segmentation Using Deep Neural Network](https://arxiv.org/abs/1906.02421), to be published at [MICCAI 2019](https://www.miccai2019.org/).
