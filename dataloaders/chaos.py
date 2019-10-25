@@ -97,7 +97,6 @@ if __name__ == '__main__':
     import torch
     import custom_transforms as tr
     from torchvision import transforms
-    print("HHI")
     transform = transforms.Compose([tr.ToTensor()])
     composed_transforms_tr = transforms.Compose([
         tr.RandomHorizontalFlip(),
@@ -109,7 +108,7 @@ if __name__ == '__main__':
         tr.SelectRange(elem = 'crop_image', _min = 20, _max = 250),
         tr.Normalize(elems = ['crop_image']),
         # tr.ConcatInputs(elems=('crop_image', 'extreme_points')),
-        tr.AddHeatMap(elem = 'crop_image', hm_type = 'l1l2', tau = 7),
+        tr.AddConfidenceMap(elem = 'crop_image', hm_type = 'l1l2', tau = 7),
         tr.ToTensor()])
 
     dataset = ChaosSegmentation(split=['val'], transform=composed_transforms_tr)
